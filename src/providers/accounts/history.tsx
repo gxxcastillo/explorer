@@ -255,7 +255,7 @@ export function useFetchAccountHistory() {
           url,
           {
             before: oldest,
-            limit: 25,
+            limit: 1000,
           },
           fetchTransactions,
           additionalSignatures
