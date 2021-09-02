@@ -2,6 +2,7 @@ import React from "react";
 import { BlockResponse } from "@solana/web3.js";
 import { ErrorCard } from "components/common/ErrorCard";
 import { Signature } from "components/common/Signature";
+import { Address } from "components/common/Address";
 
 const PAGE_SIZE = 25;
 
@@ -24,14 +25,14 @@ export function BlockHistoryCard({ block }: { block: BlockResponse }) {
             <tr>
               <th className="text-muted">Result</th>
               <th className="text-muted">Transaction Signature</th>
+              <th className="text-muted">Invoked Programs</th>
             </tr>
           </thead>
           <tbody className="list">
             {block.transactions.slice(0, numDisplayed).map((tx, i) => {
               let statusText;
               let statusClass;
-              let signature: React.ReactNode;
-              if (tx.meta?.err || tx.transaction.signatures.length === 0) {
+              if (tx.meta?.err) {
                 statusClass = "warning";
                 statusText = "Failed";
               } else {
@@ -39,11 +40,12 @@ export function BlockHistoryCard({ block }: { block: BlockResponse }) {
                 statusText = "Success";
               }
 
-              if (tx.transaction.signatures.length > 0) {
-                signature = (
-                  <Signature signature={tx.transaction.signatures[0]} link />
-                );
-              }
+              let programIndexes = tx.transaction.message.instructions.map(
+                (ix) => ix.programIdIndex
+              );
+              programIndexes = programIndexes.filter(
+                (value, index) => programIndexes.indexOf(value) === index
+              );
 
               return (
                 <tr key={i}>
@@ -53,7 +55,26 @@ export function BlockHistoryCard({ block }: { block: BlockResponse }) {
                     </span>
                   </td>
 
-                  <td>{signature}</td>
+                  <td>
+                    <Signature
+                      signature={tx.transaction.signatures[0]}
+                      link
+                      truncateChars={48}
+                    />
+                  </td>
+                  <td>
+                    {programIndexes.length === 0
+                      ? "NA"
+                      : programIndexes.map((i) => {
+                          return (
+                            <Address
+                              key={i}
+                              pubkey={tx.transaction.message.accountKeys[i]}
+                              link
+                            />
+                          );
+                        })}
+                  </td>
                 </tr>
               );
             })}
